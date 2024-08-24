@@ -6,12 +6,27 @@ pub const Error = error{
     Overflow,
 };
 
-pub fn Array(dtype: type) type {
+pub fn Array(
+    dtype: type,
+    comptime config: struct {
+        zero: ?(fn () dtype) = null,
+    },
+) type {
+    const type_info = @typeInfo(dtype);
+    const zero_func: fn () dtype = switch (type_info) {
+        .Int, .ComptimeInt, .Float, .ComptimeFloat => numeric_zero(dtype),
+        else => if (config.zero == null) @compileError("Missing zero") else config.zero.?,
+    };
+
     return struct {
         const Self = @This();
 
         allocator: Allocator,
         data: []dtype,
+
+        fn zero() dtype {
+            return zero_func();
+        }
 
         pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
             const info = shape_verify(shape_struct);
@@ -21,7 +36,7 @@ pub fn Array(dtype: type) type {
 
             const data = try allocator.alloc(dtype, total);
             for (data) |*value| {
-                value.* = 0;
+                value.* = Self.zero();
             }
 
             return Self{ .allocator = allocator, .data = data };
@@ -70,4 +85,14 @@ fn total_size(shape: []const usize) !usize {
     }
 
     return total;
+}
+
+fn numeric_zero(dtype: type) (fn () dtype) {
+    const numeric = struct {
+        pub fn zero() dtype {
+            return 0;
+        }
+    };
+
+    return numeric.zero;
 }
