@@ -15,7 +15,7 @@ fn ArrayConfig(dtype: type) type {
 }
 
 pub fn Array(
-    dtype: type,
+    comptime dtype: type,
     comptime config: ArrayConfig(dtype),
 ) type {
     const type_info = @typeInfo(dtype);
@@ -48,7 +48,7 @@ pub fn Array(
     };
 }
 
-fn shape_verify(shape_struct: anytype) Struct {
+fn shape_verify(comptime shape_struct: anytype) Struct {
     const T = @TypeOf(shape_struct);
     const type_info = @typeInfo(T);
 
@@ -58,13 +58,14 @@ fn shape_verify(shape_struct: anytype) Struct {
 
     const struct_info = type_info.Struct;
     inline for (struct_info.fields) |field| {
+        // TODO: verify types
         _ = field;
     }
 
     return struct_info;
 }
 
-fn shape_extract(info: Struct, shape_struct: anytype) [info.fields.len]usize {
+fn shape_extract(info: Struct, comptime shape_struct: anytype) [info.fields.len]usize {
     var shape: [info.fields.len]usize = undefined;
 
     inline for (0..info.fields.len, info.fields) |i, field| {
