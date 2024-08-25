@@ -28,21 +28,27 @@ pub fn Array(
         const Self = @This();
 
         allocator: Allocator,
+        shape: []usize,
         data: []dtype,
 
         pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
             const info = shape_verify(shape_struct);
-            const shape = shape_extract(info, shape_struct);
+            const shape = try shape_extract(allocator, info, shape_struct);
 
-            const total = try total_size(&shape);
+            const total = try total_size(shape);
 
             const data = try allocator.alloc(dtype, total);
             @memset(data, zero);
 
-            return Self{ .allocator = allocator, .data = data };
+            return Self{
+                .allocator = allocator,
+                .shape = shape,
+                .data = data,
+            };
         }
 
         pub fn deinit(self: Self) void {
+            self.allocator.free(self.shape);
             self.allocator.free(self.data);
         }
     };
@@ -65,8 +71,8 @@ fn shape_verify(comptime shape_struct: anytype) Struct {
     return struct_info;
 }
 
-fn shape_extract(info: Struct, comptime shape_struct: anytype) [info.fields.len]usize {
-    var shape: [info.fields.len]usize = undefined;
+fn shape_extract(allocator: Allocator, info: Struct, comptime shape_struct: anytype) ![]usize {
+    var shape = try allocator.alloc(usize, info.fields.len);
 
     inline for (0..info.fields.len, info.fields) |i, field| {
         shape[i] = @field(shape_struct, field.name);
