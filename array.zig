@@ -8,23 +8,51 @@ fn ArrayConfig(dtype: type) type {
     const type_info = @typeInfo(dtype);
     return switch (type_info) {
         .Int, .ComptimeInt, .Float, .ComptimeFloat => blk: {
-            break :blk struct {};
+            break :blk struct {
+                const Self = @This();
+
+                pub fn get_zero(self: Self) dtype {
+                    _ = self;
+                    return 0;
+                }
+            };
         },
         else => blk: {
-            break :blk struct { zero: dtype };
+            break :blk struct {
+                const Self = @This();
+
+                zero: dtype,
+
+                pub fn get_zero(self: Self) dtype {
+                    return self.zero;
+                }
+            };
         },
     };
 }
 
-pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
-    const type_info = @typeInfo(dtype);
-    const dzero: dtype = switch (type_info) {
-        .Int, .ComptimeInt, .Float, .ComptimeFloat => 0,
-        else => config.zero,
+fn ArrayConfigInternal(dtype: type) type {
+    return struct {
+        const Self = @This();
+
+        dtype: type,
+        zero: dtype,
+
+        pub fn init(config: ArrayConfig(dtype)) Self {
+            return Self{
+                .dtype = dtype,
+                .zero = config.get_zero(),
+            };
+        }
     };
+}
+
+pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
+    const config_internal = ArrayConfigInternal(dtype).init(config);
 
     return struct {
         const Self = @This();
+        const array_config = config_internal;
 
         allocator: Allocator,
         shape: []usize,
