@@ -2,17 +2,26 @@ const print = @import("std").debug.print;
 const Allocator = @import("std").mem.Allocator;
 const Struct = @import("std").builtin.Type.Struct;
 
+fn ArrayConfig(dtype: type) type {
+    const type_info = @typeInfo(dtype);
+    return switch (type_info) {
+        .Int, .ComptimeInt, .Float, .ComptimeFloat => blk: {
+            break :blk struct {};
+        },
+        else => blk: {
+            break :blk struct { zero: dtype };
+        },
+    };
+}
 
 pub fn Array(
     dtype: type,
-    comptime config: struct {
-        zero: ?(fn () dtype) = null,
-    },
+    comptime config: ArrayConfig(dtype),
 ) type {
     const type_info = @typeInfo(dtype);
-    const zero_func: fn () dtype = switch (type_info) {
-        .Int, .ComptimeInt, .Float, .ComptimeFloat => numeric_zero(dtype),
-        else => if (config.zero == null) @compileError("Missing zero") else config.zero.?,
+    const zero: dtype = switch (type_info) {
+        .Int, .ComptimeInt, .Float, .ComptimeFloat => 0,
+        else => config.zero,
     };
 
     return struct {
@@ -21,10 +30,6 @@ pub fn Array(
         allocator: Allocator,
         data: []dtype,
 
-        fn zero() dtype {
-            return zero_func();
-        }
-
         pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
             const info = shape_verify(shape_struct);
             const shape = shape_extract(info, shape_struct);
@@ -32,9 +37,7 @@ pub fn Array(
             const total = try total_size(&shape);
 
             const data = try allocator.alloc(dtype, total);
-            for (data) |*value| {
-                value.* = Self.zero();
-            }
+            @memset(data, zero);
 
             return Self{ .allocator = allocator, .data = data };
         }
@@ -82,14 +85,4 @@ fn total_size(shape: []const usize) !usize {
     }
 
     return total;
-}
-
-fn numeric_zero(dtype: type) (fn () dtype) {
-    const numeric = struct {
-        pub fn zero() dtype {
-            return 0;
-        }
-    };
-
-    return numeric.zero;
 }
