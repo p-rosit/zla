@@ -54,6 +54,7 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
         const Self = @This();
         const array_config = config_internal;
 
+        owned: bool,
         allocator: Allocator,
         shape: []usize,
         data: []dtype,
