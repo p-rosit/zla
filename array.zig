@@ -1,6 +1,8 @@
 const print = @import("std").debug.print;
-const Allocator = @import("std").mem.Allocator;
-const Struct = @import("std").builtin.Type.Struct;
+const std = @import("std");
+const math = std.math;
+const Allocator = std.mem.Allocator;
+const Struct = std.builtin.Type.Struct;
 
 fn ArrayConfig(dtype: type) type {
     const type_info = @typeInfo(dtype);
@@ -84,11 +86,10 @@ fn shape_extract(allocator: Allocator, info: Struct, comptime shape_struct: anyt
 fn total_size(shape: []const usize) !usize {
     var total: usize = 1;
     for (shape) |dim| {
+        if (math.maxInt(usize) / dim < total) {
+            return error.Overflow;
+        }
         total *= dim;
-    }
-
-    if (total > 100_000) {
-        return error.Overflow;
     }
 
     return total;
