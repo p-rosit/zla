@@ -2,9 +2,6 @@ const print = @import("std").debug.print;
 const Allocator = @import("std").mem.Allocator;
 const Struct = @import("std").builtin.Type.Struct;
 
-pub const Error = error{
-    Overflow,
-};
 
 pub fn Array(
     dtype: type,
@@ -81,7 +78,7 @@ fn total_size(shape: []const usize) !usize {
     }
 
     if (total > 100_000) {
-        return Error.Overflow;
+        return error.Overflow;
     }
 
     return total;
