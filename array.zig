@@ -59,25 +59,35 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
         shape: []usize,
         data: []dtype,
 
-        pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
-            const info = shape_verify(shape_struct);
-            const shape = try shape_extract(allocator, info, shape_struct);
-
+        fn internal_init(allocator: Allocator, shape: []usize) !Self {
             const total = try total_size(shape);
-
             const data = try allocator.alloc(dtype, total);
-            @memset(data, dzero);
 
             return Self{
+                .owned = true,
                 .allocator = allocator,
                 .shape = shape,
                 .data = data,
             };
         }
 
+        pub fn init(allocator: Allocator, shape_struct: anytype) !Self {
+            const shape_info = shape_verify(shape_struct);
+            const shape = try shape_extract(allocator, shape_info, shape_struct);
+            return Self.internal_init(allocator, shape);
+        }
+
+        pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
+            const array = try Self.init(allocator, shape_struct);
+            @memset(array.data, config_internal.zero);
+            return array;
+        }
+
         pub fn deinit(self: Self) void {
             self.allocator.free(self.shape);
-            self.allocator.free(self.data);
+            if (self.owned) {
+                self.allocator.free(self.data);
+            }
         }
     };
 }
