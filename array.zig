@@ -16,12 +16,9 @@ fn ArrayConfig(dtype: type) type {
     };
 }
 
-pub fn Array(
-    comptime dtype: type,
-    comptime config: ArrayConfig(dtype),
-) type {
+pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
     const type_info = @typeInfo(dtype);
-    const zero: dtype = switch (type_info) {
+    const dzero: dtype = switch (type_info) {
         .Int, .ComptimeInt, .Float, .ComptimeFloat => 0,
         else => config.zero,
     };
@@ -40,7 +37,7 @@ pub fn Array(
             const total = try total_size(shape);
 
             const data = try allocator.alloc(dtype, total);
-            @memset(data, zero);
+            @memset(data, dzero);
 
             return Self{
                 .allocator = allocator,
