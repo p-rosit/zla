@@ -115,7 +115,7 @@ fn shape_verify(comptime shape_struct: anytype) Struct {
     return struct_info;
 }
 
-fn shape_extract(allocator: Allocator, info: Struct, comptime shape_struct: anytype) ![]usize {
+fn shape_extract(allocator: Allocator, comptime info: Struct, comptime shape_struct: anytype) ![]usize {
     var shape = try allocator.alloc(usize, info.fields.len);
 
     inline for (0..info.fields.len, info.fields) |i, field| {
