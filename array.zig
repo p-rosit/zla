@@ -77,17 +77,17 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
             return Self.internal_init(allocator, shape);
         }
 
-        pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
-            const array = try Self.init(allocator, shape_struct);
-            @memset(array.data, config_internal.zero);
-            return array;
-        }
-
         pub fn deinit(self: Self) void {
             self.allocator.free(self.shape);
             if (self.owned) {
                 self.allocator.free(self.data);
             }
+        }
+
+        pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
+            const array = try Self.init(allocator, shape_struct);
+            @memset(array.data, config_internal.zero);
+            return array;
         }
     };
 }
