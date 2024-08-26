@@ -57,16 +57,21 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
         owned: bool,
         allocator: Allocator,
         shape: []usize,
+        stride: []usize,
         data: []dtype,
 
         fn internal_init(allocator: Allocator, shape: []usize) !Self {
             const total = try total_size(shape);
             const data = try allocator.alloc(dtype, total);
 
+            const stride = try allocator.alloc(usize, shape.len);
+            @memset(stride, 1);
+
             return Self{
                 .owned = true,
                 .allocator = allocator,
                 .shape = shape,
+                .stride = stride,
                 .data = data,
             };
         }
@@ -79,6 +84,7 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
 
         pub fn deinit(self: Self) void {
             self.allocator.free(self.shape);
+            self.allocator.free(self.stride);
             if (self.owned) {
                 self.allocator.free(self.data);
             }
