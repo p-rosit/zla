@@ -61,11 +61,20 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
         data: []dtype,
 
         fn internal_init(allocator: Allocator, shape: []usize) !Self {
-            const total = try total_size(shape);
-            const data = try allocator.alloc(dtype, total);
-
             const stride = try allocator.alloc(usize, shape.len);
-            @memset(stride, 1);
+
+            var total: usize = 1;
+            for (0..shape.len) |i| {
+                const dim = shape[shape.len - i - 1];
+                stride[shape.len - i - 1] = total;
+
+                if (math.maxInt(usize) / dim < total) {
+                    return error.Overflow;
+                }
+                total *= dim;
+            }
+
+            const data = try allocator.alloc(dtype, total);
 
             return Self{
                 .owned = true,
@@ -123,16 +132,4 @@ fn shape_extract(allocator: Allocator, comptime info: Struct, comptime shape_str
     }
 
     return shape;
-}
-
-fn total_size(shape: []const usize) !usize {
-    var total: usize = 1;
-    for (shape) |dim| {
-        if (math.maxInt(usize) / dim < total) {
-            return error.Overflow;
-        }
-        total *= dim;
-    }
-
-    return total;
 }
