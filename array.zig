@@ -92,7 +92,7 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
 
         pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
             const array = try Self.init(allocator, shape_struct);
-            @memset(array.data, config_internal.zero);
+            @memset(array.data, array_config.zero);
             return array;
         }
     };
