@@ -104,7 +104,72 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
             @memset(array.data, array_config.zero);
             return array;
         }
+
+        pub fn set(self: Self, index_struct: anytype, value: dtype) !void {
+            const info = index_verify(index_struct);
+            const index = index_extract(info, index_struct);
+
+            if (index.len != self.stride.len) {
+                return error.IndexError;
+            }
+
+            var value_index: usize = 0;
+            for (index, self.stride, self.shape) |i, stride, dim| {
+                if (i >= dim) {
+                    return error.IndexOutOfBounds;
+                }
+                value_index += i * stride;
+            }
+
+            self.data[value_index] = value;
+        }
+
+        pub fn get(self: Self, index_struct: anytype) !dtype {
+            const info = index_verify(index_struct);
+            const index = index_extract(info, index_struct);
+
+            if (index.len != self.stride.len) {
+                return error.IndexError;
+            }
+
+            var value_index: usize = 0;
+            for (index, self.stride, self.shape) |i, stride, dim| {
+                if (i >= dim) {
+                    return error.IndexOutOfBounds;
+                }
+                value_index += i * stride;
+            }
+
+            return self.data[value_index];
+        }
     };
+}
+
+fn index_verify(index_struct: anytype) Struct {
+    const T = @TypeOf(index_struct);
+    const type_info = @typeInfo(T);
+
+    if (type_info != .Struct) {
+        @compileError("Index must be anonymous struct");
+    }
+
+    const struct_info = type_info.Struct;
+    inline for (struct_info.fields) |field| {
+        // TODO: verify types
+        _ = field;
+    }
+
+    return struct_info;
+}
+
+fn index_extract(comptime info: Struct, index_struct: anytype) [info.fields.len]usize {
+    var index: [info.fields.len]usize = undefined;
+
+    inline for (0..info.fields.len, info.fields) |i, field| {
+        index[i] = @field(index_struct, field.name);
+    }
+
+    return index;
 }
 
 fn shape_verify(comptime shape_struct: anytype) Struct {
