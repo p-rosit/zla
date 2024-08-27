@@ -115,7 +115,9 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
                 stride[i] = self.stride[i] * slice.st;
             }
 
-            const linear_index = try self.get_linear_index(min_index);
+            const linear_index = self.get_linear_index(min_index) catch {
+                @panic("Unreachable error: index out of bounds");
+            };
 
             return Self{
                 .owned = false,
