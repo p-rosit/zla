@@ -11,6 +11,8 @@ fn ArrayConfig(dtype: type) type {
             break :blk struct {
                 const Self = @This();
 
+                dim: usize,
+
                 pub fn get_zero(self: Self) dtype {
                     _ = self;
                     return 0;
@@ -21,6 +23,7 @@ fn ArrayConfig(dtype: type) type {
             break :blk struct {
                 const Self = @This();
 
+                dim: usize,
                 zero: dtype,
 
                 pub fn get_zero(self: Self) dtype {
@@ -36,11 +39,13 @@ fn ArrayConfigInternal(dtype: type) type {
         const Self = @This();
 
         dtype: type,
+        dim: usize,
         zero: dtype,
 
         pub fn init(config: ArrayConfig(dtype)) Self {
             return Self{
                 .dtype = dtype,
+                .dim = config.dim,
                 .zero = config.get_zero(),
             };
         }
@@ -54,12 +59,12 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
 
         owned: bool,
         allocator: Allocator,
-        shape: []usize,
-        stride: []usize,
+        shape: [config.dim]usize,
+        stride: [config.dim]usize,
         data: []dtype,
 
-        fn internal_init(allocator: Allocator, shape: []usize) !Self {
-            const stride = try allocator.alloc(usize, shape.len);
+        fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
+            var stride: [config.dim]usize = undefined;
 
             var total: usize = 1;
             for (0..shape.len) |i| {
@@ -83,34 +88,19 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             };
         }
 
-        pub fn init(allocator: Allocator, shape_struct: anytype) !Self {
-            const shape_info = shape_verify(shape_struct);
-            const shape = try shape_extract(allocator, shape_info, shape_struct);
-            return Self.internal_init(allocator, shape);
-        }
-
         pub fn deinit(self: Self) void {
-            self.allocator.free(self.shape);
-            self.allocator.free(self.stride);
             if (self.owned) {
                 self.allocator.free(self.data);
             }
         }
 
-        pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
-            const array = try Self.init(allocator, shape_struct);
+        pub fn zeros(allocator: Allocator, shape: [config.dim]usize) !Self {
+            const array = try Self.init(allocator, shape);
             @memset(array.data, config.zero);
             return array;
         }
 
-        pub fn set(self: Self, index_struct: anytype, value: dtype) !void {
-            const info = index_verify(index_struct);
-            const index = index_extract(info, index_struct);
-
-            if (index.len != self.stride.len) {
-                return error.IndexError;
-            }
-
+        pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
             var value_index: usize = 0;
             for (index, self.stride, self.shape) |i, stride, dim| {
                 if (i >= dim) {
@@ -122,14 +112,7 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             self.data[value_index] = value;
         }
 
-        pub fn get(self: Self, index_struct: anytype) !dtype {
-            const info = index_verify(index_struct);
-            const index = index_extract(info, index_struct);
-
-            if (index.len != self.stride.len) {
-                return error.IndexError;
-            }
-
+        pub fn get(self: Self, index: [config.dim]usize) !dtype {
             var value_index: usize = 0;
             for (index, self.stride, self.shape) |i, stride, dim| {
                 if (i >= dim) {
