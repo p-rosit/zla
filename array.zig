@@ -146,6 +146,7 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
                 }
                 linear_index += i * stride;
             }
+
             return linear_index;
         }
     };
@@ -160,7 +161,7 @@ pub const Slice = struct {
         if (self.hi < self.lo) {
             return 0;
         } else {
-            return (self.hi - self.lo) / self.st;
+            return 1 + (self.hi - self.lo - 1) / self.st;
         }
     }
 };
