@@ -106,7 +106,7 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             var stride: [config.dim]usize = undefined;
 
             for (0.., slices) |i, slice| {
-                if (self.shape[i] < slice.hi) {
+                if (self.shape[i] < slice.lo and self.shape[i] < slice.hi) {
                     return error.IndexOutOfBounds;
                 }
 
