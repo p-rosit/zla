@@ -101,27 +101,24 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
         }
 
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
-            var value_index: usize = 0;
-            for (index, self.stride, self.shape) |i, stride, dim| {
-                if (i >= dim) {
-                    return error.IndexOutOfBounds;
-                }
-                value_index += i * stride;
-            }
-
-            self.data[value_index] = value;
+            const linear_index = try self.get_linear_index(index);
+            self.data[linear_index] = value;
         }
 
         pub fn get(self: Self, index: [config.dim]usize) !dtype {
-            var value_index: usize = 0;
+            const linear_index = try self.get_linear_index(index);
+            return self.data[linear_index];
+        }
+
+        fn get_linear_index(self: Self, index: [config.dim]usize) !usize {
+            var linear_index: usize = 0;
             for (index, self.stride, self.shape) |i, stride, dim| {
                 if (i >= dim) {
                     return error.IndexOutOfBounds;
                 }
-                value_index += i * stride;
+                linear_index += i * stride;
             }
-
-            return self.data[value_index];
+            return linear_index;
         }
     };
 }
