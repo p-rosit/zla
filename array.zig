@@ -47,12 +47,10 @@ fn ArrayConfigInternal(dtype: type) type {
     };
 }
 
-pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
-    const config_internal = ArrayConfigInternal(dtype).init(config);
-
+pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) type {
     return struct {
         const Self = @This();
-        const array_config = config_internal;
+        const config = ArrayConfigInternal(dtype).init(array_config);
 
         owned: bool,
         allocator: Allocator,
@@ -101,7 +99,7 @@ pub fn Array(comptime dtype: type, comptime config: ArrayConfig(dtype)) type {
 
         pub fn zeros(allocator: Allocator, shape_struct: anytype) !Self {
             const array = try Self.init(allocator, shape_struct);
-            @memset(array.data, array_config.zero);
+            @memset(array.data, config.zero);
             return array;
         }
 
