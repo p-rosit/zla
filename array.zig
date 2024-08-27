@@ -100,6 +100,32 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             return array;
         }
 
+        pub fn view(self: Self, slices: [config.dim]Slice) !Self {
+            var min_index: [config.dim]usize = undefined;
+            var shape: [config.dim]usize = undefined;
+            var stride: [config.dim]usize = undefined;
+
+            for (0.., slices) |i, slice| {
+                if (self.shape[i] < slice.hi) {
+                    return error.IndexOutOfBounds;
+                }
+
+                min_index[i] = slice.lo;
+                shape[i] = slice.size();
+                stride[i] = self.stride[i] * slice.st;
+            }
+
+            const linear_index = try self.get_linear_index(min_index);
+
+            return Self{
+                .owned = false,
+                .allocator = self.allocator,
+                .shape = shape,
+                .stride = stride,
+                .data = self.data[linear_index..],
+            };
+        }
+
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
             const linear_index = try self.get_linear_index(index);
             self.data[linear_index] = value;
@@ -122,4 +148,18 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
         }
     };
 }
+
+pub const Slice = struct {
+    lo: usize = 0,
+    hi: usize,
+    st: usize = 1,
+
+    pub fn size(self: Slice) usize {
+        if (self.hi < self.lo) {
+            return 0;
+        } else {
+            return (self.hi - self.lo) / self.st;
+        }
+    }
+};
 
