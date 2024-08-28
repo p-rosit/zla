@@ -179,6 +179,30 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             };
         }
 
+        pub fn permute(self: *Self, permutation: [config.dim]usize) !void {
+            var index_exists: [config.dim]bool = undefined;
+            @memset(&index_exists, false);
+
+            for (permutation) |i| {
+                if (config.dim - 1 < i) return error.IndexOutOfBounds;
+                index_exists[i] = true;
+            }
+
+            var all_exist = true;
+            for (index_exists) |exists| {
+                all_exist = all_exist and exists;
+            }
+
+            if (!all_exist) return error.MissingIndex;
+
+            const shape = self.shape;
+            const stride = self.stride;
+            for (0.., permutation) |destination, source| {
+                self.shape[destination] = shape[source];
+                self.stride[destination] = stride[source];
+            }
+        }
+
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
             const linear_index = try self.get_linear_index(index);
             self.data[linear_index] = value;
