@@ -74,10 +74,7 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
                     .index = undefined,
                     .complete = false,
                 };
-
-                for (&iter.index) |*i| {
-                    i.* = 0;
-                }
+                @memset(&iter.index, 0);
 
                 return iter;
             }
