@@ -233,6 +233,10 @@ pub const Slice = struct {
     st: usize = 1,
 
     pub fn size(self: Slice) usize {
+        if (self.st == 0) {
+            @panic("Cannot get size of slice if stride is zero");
+        }
+
         if (self.hi < self.lo) {
             return 0;
         } else {
