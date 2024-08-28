@@ -63,6 +63,46 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
         stride: [config.dim]usize,
         data: []dtype,
 
+        const Iter = struct {
+            complete: bool,
+            shape: [config.dim]usize,
+            index: [config.dim]usize,
+
+            pub fn init(shape: [config.dim]usize) Iter {
+                var iter = Iter{
+                    .shape = shape,
+                    .index = undefined,
+                    .complete = false,
+                };
+
+                for (&iter.index) |*i| {
+                    i.* = 0;
+                }
+
+                return iter;
+            }
+
+            pub fn next(self: *Iter) ?[config.dim]usize {
+                if (self.complete) return null;
+
+                const current = self.index;
+
+                for (0..self.index.len) |i| {
+                    const reversed = self.index.len - i - 1;
+                    self.index[reversed] += 1;
+
+                    if (self.index[reversed] < self.shape[reversed]) {
+                        return current;
+                    }
+
+                    self.index[reversed] = 0;
+                }
+
+                self.complete = true;
+                return current;
+            }
+        };
+
         fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
             var stride: [config.dim]usize = undefined;
 
@@ -98,6 +138,20 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             const array = try Self.init(allocator, shape);
             @memset(array.data, config.zero);
             return array;
+        }
+
+        pub fn clone(self: Self) !Self {
+            const copy = try Self.zeros(self.allocator, self.shape);
+            var linear_index: usize = 0;
+            var iter = Self.Iter.init(self.shape);
+
+            while (iter.next()) |index| : (linear_index += 1) {
+                copy.data[linear_index] = self.get(index) catch {
+                    @panic("Unreachable error: index out of bounds");
+                };
+            }
+
+            return copy;
         }
 
         pub fn view(self: Self, slices: [config.dim]Slice) !Self {
