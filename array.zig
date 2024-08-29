@@ -159,16 +159,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
         }
 
         pub fn add(self: Self, other: Self) !Self {
-            var shape: [config.dim]usize = undefined;
-
-            for (0.., self.shape, other.shape) |i, shape1, shape2| {
-                if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
-                    return error.NotCompatibleOrBrodcastable;
-                }
-
-                shape[i] = @max(shape1, shape2);
-            }
-
+            const shape = try self.broadcast_shape(other);
             const result = try Self.init(self.allocator, shape);
 
             var linear_index: usize = 0;
@@ -187,6 +178,19 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             }
 
             return result;
+        }
+
+        pub fn broadcast_shape(self: Self, other: Self) ![config.dim]usize {
+            var shape: [config.dim]usize = undefined;
+
+            for (0.., self.shape, other.shape) |i, shape1, shape2| {
+                if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
+                    return error.NotCompatibleOrBrodcastable;
+                }
+                shape[i] = @max(shape1, shape2);
+            }
+
+            return shape;
         }
 
         fn broadcast_index(self: Self, index: [config.dim]usize) [config.dim]usize {
