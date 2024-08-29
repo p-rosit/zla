@@ -184,7 +184,7 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             @memset(&index_exists, false);
 
             for (permutation) |i| {
-                if (config.dim - 1 < i) return error.IndexOutOfBounds;
+                if (!(i < config.dim)) return error.IndexOutOfBounds;
                 index_exists[i] = true;
             }
 
