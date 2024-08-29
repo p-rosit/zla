@@ -3,59 +3,12 @@ const std = @import("std");
 const math = std.math;
 const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
+const cfg = @import("config.zig");
 
-fn ArrayConfig(dtype: type) type {
-    const type_info = @typeInfo(dtype);
-    return switch (type_info) {
-        .Int, .ComptimeInt, .Float, .ComptimeFloat => blk: {
-            break :blk struct {
-                const Self = @This();
-
-                dim: usize,
-
-                pub fn get_zero(self: Self) dtype {
-                    _ = self;
-                    return 0;
-                }
-            };
-        },
-        else => blk: {
-            break :blk struct {
-                const Self = @This();
-
-                dim: usize,
-                zero: dtype,
-
-                pub fn get_zero(self: Self) dtype {
-                    return self.zero;
-                }
-            };
-        },
-    };
-}
-
-fn ArrayConfigInternal(dtype: type) type {
+pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)) type {
     return struct {
         const Self = @This();
-
-        dtype: type,
-        dim: usize,
-        zero: dtype,
-
-        pub fn init(config: ArrayConfig(dtype)) Self {
-            return Self{
-                .dtype = dtype,
-                .dim = config.dim,
-                .zero = config.get_zero(),
-            };
-        }
-    };
-}
-
-pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) type {
-    return struct {
-        const Self = @This();
-        const config = ArrayConfigInternal(dtype).init(array_config);
+        const config = cfg.ArrayConfigInternal(dtype).init(array_config);
 
         owned: bool,
         allocator: Allocator,
