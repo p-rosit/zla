@@ -4,6 +4,7 @@ const math = std.math;
 const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
 const cfg = @import("config.zig");
+const idx = @import("index_iter.zig");
 
 pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)) type {
     return struct {
@@ -16,42 +17,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
         stride: [config.dim]usize,
         data: []dtype,
 
-        const Iter = struct {
-            complete: bool,
-            shape: [config.dim]usize,
-            index: [config.dim]usize,
-
-            pub fn init(shape: [config.dim]usize) Iter {
-                var iter = Iter{
-                    .shape = shape,
-                    .index = undefined,
-                    .complete = false,
-                };
-                @memset(&iter.index, 0);
-
-                return iter;
-            }
-
-            pub fn next(self: *Iter) ?[config.dim]usize {
-                if (self.complete) return null;
-
-                const current = self.index;
-
-                for (0..self.index.len) |i| {
-                    const reversed = self.index.len - i - 1;
-                    self.index[reversed] += 1;
-
-                    if (self.index[reversed] < self.shape[reversed]) {
-                        return current;
-                    }
-
-                    self.index[reversed] = 0;
-                }
-
-                self.complete = true;
-                return current;
-            }
-        };
+        const Iter = idx.IndexIter(config.dim);
 
         fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
             var stride: [config.dim]usize = undefined;
