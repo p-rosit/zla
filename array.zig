@@ -174,21 +174,10 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             var linear_index: usize = 0;
             var iter = Self.Iter.init(shape);
             while (iter.next()) |index| {
-                var index1 = index;
-                var index2 = index;
-                for (0.., self.shape, other.shape) |i, shape1, shape2| {
-                    if (shape1 == 1) {
-                        index1[i] = 0;
-                    }
-                    if (shape2 == 1) {
-                        index2[i] = 0;
-                    }
-                }
-
-                const v1 = self.get(index1) catch {
+                const v1 = self.get(self.broadcast_index(index)) catch {
                     @panic("Unreachable");
                 };
-                const v2 = other.get(index2) catch {
+                const v2 = other.get(other.broadcast_index(index)) catch {
                     @panic("Unreachable");
                 };
 
@@ -198,6 +187,16 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             }
 
             return result;
+        }
+
+        fn broadcast_index(self: Self, index: [config.dim]usize) [config.dim]usize {
+            var temp: [config.dim]usize = undefined;
+
+            for (0.., self.shape) |i, dim| {
+                temp[i] = index[i] * @intFromBool(dim != 1);
+            }
+
+            return temp;
         }
     };
 }
