@@ -203,6 +203,20 @@ pub fn Array(comptime dtype: type, comptime array_config: ArrayConfig(dtype)) ty
             }
         }
 
+        pub fn transpose(self: *Self, index1: usize, index2: usize) !void {
+            if (!(index1 < config.dim and index2 < config.dim)) {
+                return error.IndexOutOfBounds;
+            }
+
+            const shape = self.shape[index1];
+            self.shape[index1] = self.shape[index2];
+            self.shape[index2] = shape;
+
+            const stride = self.stride[index1];
+            self.stride[index1] = self.stride[index2];
+            self.stride[index2] = stride;
+        }
+
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
             const linear_index = try self.get_linear_index(index);
             self.data[linear_index] = value;
