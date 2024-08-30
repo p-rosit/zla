@@ -162,15 +162,14 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             const shape = try self.broadcast_shape(other);
             const result = try Self.init(self.allocator, shape);
 
+            const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");
+            const a2 = other.broadcast_to_shape(shape) catch @panic("Unreachable");
+
             var linear_index: usize = 0;
             var iter = Self.Iter.init(shape);
             while (iter.next()) |index| {
-                const v1 = self.get(self.broadcast_index(index)) catch {
-                    @panic("Unreachable");
-                };
-                const v2 = other.get(other.broadcast_index(index)) catch {
-                    @panic("Unreachable");
-                };
+                const v1 = a1.get(index) catch @panic("Unreachable");
+                const v2 = a2.get(index) catch @panic("Unreachable");
 
                 result.data[linear_index] = v1 + v2;
 
@@ -178,6 +177,21 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             }
 
             return result;
+        }
+
+        pub fn broadcast_to_shape(self: Self, shape: [config.dim]usize) !Self {
+            var brd = self;
+
+            for (&brd.shape, &brd.stride, shape) |*brd_dim, *brd_stride, dim| {
+                if (brd_dim.* == 1) {
+                    brd_dim.* = dim;
+                    brd_stride.* = 0;
+                } else if (brd_dim.* != dim) {
+                    return error.NotCompatibleOrBroadcastable;
+                }
+            }
+
+            return brd;
         }
 
         pub fn broadcast_shape(self: Self, other: Self) ![config.dim]usize {
@@ -191,16 +205,6 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             }
 
             return shape;
-        }
-
-        fn broadcast_index(self: Self, index: [config.dim]usize) [config.dim]usize {
-            var temp: [config.dim]usize = undefined;
-
-            for (0.., self.shape) |i, dim| {
-                temp[i] = index[i] * @intFromBool(dim != 1);
-            }
-
-            return temp;
         }
     };
 }
