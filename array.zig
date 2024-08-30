@@ -212,6 +212,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
         }
 
         pub fn add(self: Self, other: Self) !Self {
+            // TODO: can be optimized with single for loop if arrays are compatible
             const shape = try self.get_broadcast_shape(other);
             const result = try Self.init(self.allocator, shape);
 
