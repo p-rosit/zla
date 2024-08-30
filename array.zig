@@ -147,6 +147,48 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             self.stride[index2] = stride;
         }
 
+        pub fn debug_print(self: Self) void {
+            print("Array[{}](shape={any}, stride={any})\n", .{ config.dtype, self.shape, self.stride });
+
+            for (0..config.dim) |_| print("[", .{});
+
+            var increments: usize = 0;
+            var index: [config.dim]usize = undefined;
+            @memset(&index, 0);
+            while (true) {
+                const linear_index = self.get_linear_index(index) catch unreachable;
+
+                print("{}", .{self.data[linear_index]});
+
+                var loop_break = false;
+                increments = 0;
+                for (0..index.len) |i| {
+                    const reversed = index.len - i - 1;
+                    index[reversed] += 1;
+
+                    if (index[reversed] < self.shape[reversed]) {
+                        loop_break = true;
+                        break;
+                    }
+
+                    increments += 1;
+                    index[reversed] = 0;
+                }
+
+                if (increments == 0) print(", ", .{});
+
+                for (0..increments) |_| print("]", .{});
+                if (!loop_break) break;
+                if (increments > 0) {
+                    print("\n", .{});
+                    if (increments > 1) print("\n", .{});
+                    for (0..config.dim - increments) |_| print(" ", .{});
+                    for (0..increments) |_| print("[", .{});
+                }
+            }
+            print("\n", .{});
+        }
+
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
             const linear_index = try self.get_linear_index(index);
             self.data[linear_index] = value;
