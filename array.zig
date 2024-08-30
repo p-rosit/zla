@@ -271,7 +271,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
                 shape[i] = @field(reshape_struct, field.name);
             }
 
-            const self_total = self.data.len;
+            const self_total = get_total_size(&self.shape) catch unreachable;
             const new_total = try get_total_size(&shape);
 
             if (self_total != new_total) {
@@ -299,7 +299,7 @@ fn ArrayReshape(reshape_struct: anytype, config: anytype) type {
     });
 }
 
-fn get_total_size(shape: []usize) !usize {
+fn get_total_size(shape: []const usize) !usize {
     var total: usize = 1;
 
     for (shape) |dim| {
