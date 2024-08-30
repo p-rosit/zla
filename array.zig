@@ -166,7 +166,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
         }
 
         pub fn add(self: Self, other: Self) !Self {
-            const shape = try self.broadcast_shape(other);
+            const shape = try self.get_broadcast_shape(other);
             const result = try Self.init(self.allocator, shape);
 
             const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");
@@ -201,7 +201,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             return brd;
         }
 
-        pub fn broadcast_shape(self: Self, other: Self) ![config.dim]usize {
+        pub fn get_broadcast_shape(self: Self, other: Self) ![config.dim]usize {
             var shape: [config.dim]usize = undefined;
 
             for (0.., self.shape, other.shape) |i, shape1, shape2| {
@@ -233,4 +233,3 @@ pub const Slice = struct {
         }
     }
 };
-
