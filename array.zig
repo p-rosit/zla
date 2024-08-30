@@ -81,6 +81,18 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             return copy;
         }
 
+        pub fn ensure_owned(self: Self) !Self {
+            var array: Self = undefined;
+
+            if (self.owned) {
+                array = self;
+            } else {
+                array = try self.clone();
+            }
+
+            return array;
+        }
+
         pub fn view(self: Self, slices: [config.dim]Slice) !Self {
             var min_index: [config.dim]usize = undefined;
             var shape: [config.dim]usize = undefined;
