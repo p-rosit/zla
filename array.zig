@@ -30,7 +30,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
 
         const Iter = idx.IndexIter(config.dim);
 
-        fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
+        pub fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
             var stride: [config.dim]usize = undefined;
 
             var total: usize = 1;
