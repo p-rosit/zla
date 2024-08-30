@@ -13,10 +13,14 @@ pub const Error = error{
     NotCompatibleOrBroadcastable,
 };
 
-pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)) type {
+pub fn Array(comptime dtype: type, comptime config: cfg.ArrayConfig(dtype)) type {
+    return ArrayInternal(dtype, cfg.ArrayConfigInternal(dtype).init(config));
+}
+
+pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
-        const config = cfg.ArrayConfigInternal(dtype).init(array_config);
+        const config = array_config;
 
         owned: bool,
         allocator: Allocator,
@@ -213,7 +217,73 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
 
             return shape;
         }
+
+        pub fn reshape(self: Self, reshape_struct: anytype) !ArrayReshape(reshape_struct, config) {
+            // TODO: can be heavily optimized if data is contiguous
+            const ReshapeArray = ArrayReshape(reshape_struct, config);
+            const info = get_reshape_info(reshape_struct);
+
+            var shape: [ReshapeArray.config.dim]usize = undefined;
+            inline for (0.., info.fields) |i, field| {
+                shape[i] = @field(reshape_struct, field.name);
+            }
+
+            const self_total = self.data.len;
+            const new_total = try get_total_size(&shape);
+
+            if (self_total != new_total) {
+                return Error.NotCompatibleOrBroadcastable;
+            }
+
+            var linear_index: usize = 0;
+            const array = try ReshapeArray.init(self.allocator, shape);
+            var iter = Self.Iter.init(self.shape);
+            while (iter.next()) |index| : (linear_index += 1) {
+                array.data[linear_index] = self.get(index) catch unreachable;
+            }
+
+            return array;
+        }
     };
+}
+
+fn ArrayReshape(reshape_struct: anytype, config: anytype) type {
+    const info = get_reshape_info(reshape_struct);
+    return ArrayInternal(config.dtype, cfg.ArrayConfigInternal(config.dtype){
+        .dtype = config.dtype,
+        .dim = info.fields.len,
+        .zero = config.zero,
+    });
+}
+
+fn get_total_size(shape: []usize) !usize {
+    var total: usize = 1;
+
+    for (shape) |dim| {
+        if (math.maxInt(usize) / dim < total) {
+            return Error.Overflow;
+        }
+        total *= dim;
+    }
+
+    return total;
+}
+
+fn get_reshape_info(reshape_struct: anytype) Struct {
+    const T = @TypeOf(reshape_struct);
+    const type_info = @typeInfo(T);
+
+    if (type_info != .Struct) {
+        @compileError("New shape must be struct");
+    }
+
+    const struct_info = type_info.Struct;
+    inline for (struct_info.fields) |field| {
+        // TODO: verify index is usize or similar
+        _ = field;
+    }
+
+    return struct_info;
 }
 
 pub const Slice = struct {
