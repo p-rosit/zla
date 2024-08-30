@@ -6,6 +6,13 @@ const Struct = std.builtin.Type.Struct;
 const cfg = @import("config.zig");
 const idx = @import("index_iter.zig");
 
+pub const Error = error{
+    Overflow,
+    OutOfBounds,
+    MissingIndex,
+    NotCompatibleOrBroadcastable,
+};
+
 pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)) type {
     return struct {
         const Self = @This();
@@ -28,7 +35,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
                 stride[shape.len - i - 1] = total;
 
                 if (math.maxInt(usize) / dim < total) {
-                    return error.Overflow;
+                    return Error.Overflow;
                 }
                 total *= dim;
             }
@@ -77,7 +84,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
 
             for (0.., slices) |i, slice| {
                 if (self.shape[i] < slice.lo and self.shape[i] < slice.hi) {
-                    return error.IndexOutOfBounds;
+                    return Error.OutOfBounds;
                 }
 
                 min_index[i] = slice.lo;
@@ -103,7 +110,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             @memset(&index_exists, false);
 
             for (permutation) |i| {
-                if (!(i < config.dim)) return error.IndexOutOfBounds;
+                if (!(i < config.dim)) return Error.OutOfBounds;
                 index_exists[i] = true;
             }
 
@@ -112,7 +119,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
                 all_exist = all_exist and exists;
             }
 
-            if (!all_exist) return error.MissingIndex;
+            if (!all_exist) return Error.MissingIndex;
 
             const shape = self.shape;
             const stride = self.stride;
@@ -124,7 +131,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
 
         pub fn transpose(self: *Self, index1: usize, index2: usize) !void {
             if (!(index1 < config.dim and index2 < config.dim)) {
-                return error.IndexOutOfBounds;
+                return Error.OutOfBounds;
             }
 
             const shape = self.shape[index1];
@@ -150,7 +157,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
             var linear_index: usize = 0;
             for (index, self.stride, self.shape) |i, stride, dim| {
                 if (i >= dim) {
-                    return error.IndexOutOfBounds;
+                    return Error.OutOfBounds;
                 }
                 linear_index += i * stride;
             }
@@ -187,7 +194,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
                     brd_dim.* = dim;
                     brd_stride.* = 0;
                 } else if (brd_dim.* != dim) {
-                    return error.NotCompatibleOrBroadcastable;
+                    return Error.NotCompatibleOrBroadcastable;
                 }
             }
 
@@ -199,7 +206,7 @@ pub fn Array(comptime dtype: type, comptime array_config: cfg.ArrayConfig(dtype)
 
             for (0.., self.shape, other.shape) |i, shape1, shape2| {
                 if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
-                    return error.NotCompatibleOrBrodcastable;
+                    return Error.NotCompatibleOrBroadcastable;
                 }
                 shape[i] = @max(shape1, shape2);
             }
