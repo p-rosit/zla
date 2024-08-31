@@ -229,6 +229,14 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             return blas.sub(Self, self, other);
         }
 
+        pub fn mul(self: Self, other: Self) !Self {
+            return blas.mul(Self, self, other);
+        }
+
+        pub fn div(self: Self, other: Self) !Self {
+            return blas.div(Self, self, other);
+        }
+
         pub fn broadcast_to_shape(self: Self, shape: [config.dim]usize) !Self {
             var brd = self;
 

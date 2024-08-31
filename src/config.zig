@@ -20,6 +20,16 @@ pub fn ArrayConfig(dtype: type) type {
                     return a - b;
                 }
 
+                pub inline fn mul(self: Self, a: dtype, b: dtype) dtype {
+                    _ = self;
+                    return a * b;
+                }
+
+                pub inline fn div(self: Self, a: dtype, b: dtype) dtype {
+                    _ = self;
+                    return a / b;
+                }
+
                 pub fn get_blas(self: Self) BlasType {
                     return self.blas;
                 }
@@ -38,6 +48,8 @@ pub fn ArrayConfig(dtype: type) type {
                 zero: dtype,
                 add: fn (dtype, dtype) callconv(.Inline) dtype,
                 sub: fn (dtype, dtype) callconv(.Inline) dtype,
+                mul: fn (dtype, dtype) callconv(.Inline) dtype,
+                div: fn (dtype, dtype) callconv(.Inline) dtype,
 
                 pub inline fn add(self: Self, a: dtype, b: dtype) dtype {
                     return self.add(a, b);
@@ -45,6 +57,14 @@ pub fn ArrayConfig(dtype: type) type {
 
                 pub inline fn sub(self: Self, a: dtype, b: dtype) dtype {
                     return self.sub(a, b);
+                }
+
+                pub inline fn mul(self: Self, a: dtype, b: dtype) dtype {
+                    return self.mul(a, b);
+                }
+
+                pub inline fn div(self: Self, a: dtype, b: dtype) dtype {
+                    return self.div(a, b);
                 }
 
                 pub fn get_blas(self: Self) BlasType {
@@ -78,6 +98,14 @@ pub fn ArrayConfigInternal(dtype: type) type {
 
                 pub inline fn sub(a: dtype, b: dtype) dtype {
                     return config.sub(a, b);
+                }
+
+                pub inline fn mul(a: dtype, b: dtype) dtype {
+                    return config.mul(a, b);
+                }
+
+                pub inline fn div(a: dtype, b: dtype) dtype {
+                    return config.div(a, b);
                 }
             };
 
@@ -120,10 +148,25 @@ const Data = struct {
             .b = self.b + other.b,
         };
     }
+
     pub inline fn sub(self: Data, other: Data) Data {
         return Data{
             .a = self.a - other.a,
             .b = self.b - other.b,
+        };
+    }
+
+    pub inline fn mul(self: Data, other: Data) Data {
+        return Data{
+            .a = self.a * other.a,
+            .b = self.b * other.b,
+        };
+    }
+
+    pub inline fn div(self: Data, other: Data) Data {
+        return Data{
+            .a = self.a / other.a,
+            .b = self.b / other.b,
         };
     }
 };
@@ -134,6 +177,8 @@ test "custom type expects zero" {
         .zero = Data{ .a = 0, .b = 0 },
         .add = Data.add,
         .sub = Data.sub,
+        .mul = Data.mul,
+        .div = Data.div,
     };
 }
 
