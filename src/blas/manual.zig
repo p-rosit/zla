@@ -1,4 +1,4 @@
-pub fn add(Array: type, self: Array, other: Array) !Array {
+pub fn add(comptime Array: type, self: Array, other: Array) !Array {
     // TODO: can be optimized with single for loop if arrays are compatible
     const shape = try self.get_broadcast_shape(other);
     const result = try Array.init(self.allocator, shape);
