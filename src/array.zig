@@ -448,3 +448,37 @@ test "view" {
     assert(view_view.stride[0] == 24);
     assert(view_view.stride[1] == 2);
 }
+
+test "permute" {
+    var arr = try TestArray(f64, 4).init(std.testing.allocator, .{ 3, 4, 5, 6 });
+    defer arr.deinit();
+
+    try arr.permute(.{ 0, 2, 3, 1 });
+
+    assert(arr.shape[0] == 3);
+    assert(arr.shape[1] == 5);
+    assert(arr.shape[2] == 6);
+    assert(arr.shape[3] == 4);
+
+    assert(arr.stride[0] == 4 * 5 * 6);
+    assert(arr.stride[1] == 6);
+    assert(arr.stride[2] == 1);
+    assert(arr.stride[3] == 5 * 6);
+}
+
+test "transpose" {
+    var arr = try TestArray(f64, 4).init(std.testing.allocator, .{ 2, 3, 4, 5 });
+    defer arr.deinit();
+
+    try arr.transpose(0, 2);
+
+    assert(arr.shape[0] == 4);
+    assert(arr.shape[1] == 3);
+    assert(arr.shape[2] == 2);
+    assert(arr.shape[3] == 5);
+
+    assert(arr.stride[0] == 5);
+    assert(arr.stride[1] == 5 * 4);
+    assert(arr.stride[2] == 5 * 4 * 3);
+    assert(arr.stride[3] == 1);
+}
