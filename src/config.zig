@@ -7,7 +7,12 @@ pub fn ArrayConfig(dtype: type) type {
             break :blk struct {
                 const Self = @This();
 
+                blas: BlasType = .manual,
                 dim: usize,
+
+                pub fn get_blas(self: Self) BlasType {
+                    return self.blas;
+                }
 
                 pub fn get_zero(self: Self) dtype {
                     _ = self;
@@ -22,6 +27,11 @@ pub fn ArrayConfig(dtype: type) type {
                 dim: usize,
                 zero: dtype,
 
+                pub fn get_blas(self: Self) BlasType {
+                    _ = self;
+                    return .manual;
+                }
+
                 pub fn get_zero(self: Self) dtype {
                     return self.zero;
                 }
@@ -34,12 +44,14 @@ pub fn ArrayConfigInternal(dtype: type) type {
     return struct {
         const Self = @This();
 
+        blas: BlasType,
         dtype: type,
         dim: usize,
         zero: dtype,
 
         pub fn init(config: ArrayConfig(dtype)) Self {
             return Self{
+                .blas = config.get_blas(),
                 .dtype = dtype,
                 .dim = config.dim,
                 .zero = config.get_zero(),
@@ -47,6 +59,11 @@ pub fn ArrayConfigInternal(dtype: type) type {
         }
     };
 }
+
+const BlasType = enum {
+    manual,
+    openblas,
+};
 
 test "numerical expects dim" {
     _ = ArrayConfig(f32){ .dim = 1 };
@@ -77,6 +94,7 @@ test "internal from external" {
     const config = ArrayConfig(f64){ .dim = 3 };
     const internal = ArrayConfigInternal(f64).init(config);
 
+    assert(internal.blas == .manual);
     assert(internal.dtype == f64);
     assert(internal.dim == 3);
     assert(internal.zero == 0.0);

@@ -6,6 +6,7 @@ const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
 const cfg = @import("config.zig");
 const idx = @import("index_iter.zig");
+const blas = @import("blas/blas.zig");
 
 pub const Error = error{
     Overflow,
@@ -17,7 +18,7 @@ pub const Error = error{
 pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
-        const config = array_config;
+        pub const config = array_config;
 
         owned: bool,
         allocator: Allocator,
@@ -25,7 +26,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
         stride: [config.dim]usize,
         data: []dtype,
 
-        const Iter = idx.IndexIter(config.dim);
+        pub const Iter = idx.IndexIter(config.dim);
 
         pub fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
             var stride: [config.dim]usize = undefined;
@@ -221,25 +222,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
         }
 
         pub fn add(self: Self, other: Self) !Self {
-            // TODO: can be optimized with single for loop if arrays are compatible
-            const shape = try self.get_broadcast_shape(other);
-            const result = try Self.init(self.allocator, shape);
-
-            const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");
-            const a2 = other.broadcast_to_shape(shape) catch @panic("Unreachable");
-
-            var linear_index: usize = 0;
-            var iter = Self.Iter.init(shape);
-            while (iter.next()) |index| {
-                const v1 = a1.get(index) catch @panic("Unreachable");
-                const v2 = a2.get(index) catch @panic("Unreachable");
-
-                result.data[linear_index] = v1 + v2;
-
-                linear_index += 1;
-            }
-
-            return result;
+            return blas.add(Self, self, other);
         }
 
         pub fn broadcast_to_shape(self: Self, shape: [config.dim]usize) !Self {
@@ -362,6 +345,7 @@ fn TestArray(dtype: type, dim: usize) type {
             return ArrayInternal(
                 dtype,
                 .{
+                    .blas = .manual,
                     .dtype = dtype,
                     .dim = dim,
                     .zero = 0,
