@@ -355,27 +355,25 @@ pub const Slice = struct {
     }
 };
 
-const TestArray = struct {
-    pub fn array(dtype: type, dim: usize) type {
-        switch (dtype) {
-            i8, f64 => {
-                return ArrayInternal(
-                    dtype,
-                    .{
-                        .dtype = dtype,
-                        .dim = dim,
-                        .zero = 0,
-                    },
-                );
-            },
-            else => @compileError("Oops"),
-        }
+fn TestArray(dtype: type, dim: usize) type {
+    switch (dtype) {
+        i8, f64 => {
+            return ArrayInternal(
+                dtype,
+                .{
+                    .dtype = dtype,
+                    .dim = dim,
+                    .zero = 0,
+                },
+            );
+        },
+        else => @compileError("Oops"),
     }
-};
+}
 
 test "init" {
     const size: usize = 2;
-    const arr = try TestArray.array(f64, size).init(std.testing.allocator, .{ 2, 3 });
+    const arr = try TestArray(f64, size).init(std.testing.allocator, .{ 2, 3 });
     defer arr.deinit();
 
     std.debug.assert(arr.owned == true);
@@ -392,7 +390,7 @@ test "init" {
 
 test "zeros" {
     const size: usize = 3;
-    const arr = try TestArray.array(i8, size).zeros(std.testing.allocator, .{ 2, 4, 5 });
+    const arr = try TestArray(i8, size).zeros(std.testing.allocator, .{ 2, 4, 5 });
     defer arr.deinit();
 
     for (arr.data) |value| {
@@ -401,13 +399,13 @@ test "zeros" {
 }
 
 test "clone" {
-    const size: usize = 2;
-    const arr = try Test
+    // const size: usize = 2;
+    // const arr = try Test
 }
 
 test "view" {
     const size: usize = 2;
-    const arr = try TestArray.array(f64, size).init(std.testing.allocator, .{ 10, 8 });
+    const arr = try TestArray(f64, size).init(std.testing.allocator, .{ 10, 8 });
     defer arr.deinit();
 
     const view = try arr.view(.{
