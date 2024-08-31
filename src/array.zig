@@ -399,8 +399,21 @@ test "zeros" {
 }
 
 test "clone" {
-    // const size: usize = 2;
-    // const arr = try Test
+    const arr = try TestArray(f64, 2).zeros(std.testing.allocator, .{ 10, 9 });
+    defer arr.deinit();
+
+    const cloned = try arr.clone();
+    defer cloned.deinit();
+
+    std.debug.assert(cloned.owned == true);
+
+    std.debug.assert(cloned.shape.len == 2);
+    std.debug.assert(cloned.shape[0] == 10);
+    std.debug.assert(cloned.shape[1] == 9);
+
+    std.debug.assert(cloned.stride.len == 2);
+    std.debug.assert(cloned.stride[0] == 9);
+    std.debug.assert(cloned.stride[1] == 1);
 }
 
 test "view" {
@@ -414,8 +427,10 @@ test "view" {
     });
 
     std.debug.assert(view.owned == false);
+
     std.debug.assert(view.shape[0] == 8);
     std.debug.assert(view.shape[1] == 4);
+
     std.debug.assert(view.stride[0] == 8);
     std.debug.assert(view.stride[1] == 2);
 
@@ -425,8 +440,10 @@ test "view" {
     });
 
     std.debug.assert(view_view.owned == false);
+
     std.debug.assert(view_view.shape[0] == 3);
     std.debug.assert(view_view.shape[1] == 3);
+
     std.debug.assert(view_view.stride[0] == 24);
     std.debug.assert(view_view.stride[1] == 2);
 }
