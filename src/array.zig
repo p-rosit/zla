@@ -237,6 +237,10 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             return blas.div(Self, self, other);
         }
 
+        pub fn matmul(self: Self, other: Self) !Self {
+            return blas.matmul(Self, self, other);
+        }
+
         pub fn broadcast_to_shape(self: Self, shape: [config.dim]usize) !Self {
             var brd = self;
 

@@ -21,3 +21,9 @@ pub fn div(comptime Array: type, self: Array, other: Array) !Array {
     _ = other;
     @compileError("Not implemented");
 }
+
+pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
+    _ = self;
+    _ = other;
+    @compileError("Not implemented");
+}

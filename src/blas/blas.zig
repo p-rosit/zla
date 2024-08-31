@@ -29,3 +29,10 @@ pub fn div(comptime Array: type, self: Array, other: Array) !Array {
         .openblas => openblas.div(Array, self, other),
     };
 }
+
+pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
+    return switch (Array.config.blas) {
+        .manual => manual.matmul(Array, self, other),
+        .openblas => openblas.matmul(Array, self, other),
+    };
+}
