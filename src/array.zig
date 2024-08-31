@@ -13,10 +13,6 @@ pub const Error = error{
     NotCompatibleOrBroadcastable,
 };
 
-pub fn Array(comptime dtype: type, comptime config: cfg.ArrayConfig(dtype)) type {
-    return ArrayInternal(dtype, cfg.ArrayConfigInternal(dtype).init(config));
-}
-
 pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
@@ -358,3 +354,7 @@ pub const Slice = struct {
         }
     }
 };
+
+test "array" {
+    std.debug.assert(1 == 1);
+}
