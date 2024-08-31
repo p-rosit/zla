@@ -1,5 +1,6 @@
-const print = @import("std").debug.print;
 const std = @import("std");
+const print = std.debug.print;
+const assert = std.debug.assert;
 const math = std.math;
 const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
@@ -376,16 +377,16 @@ test "init" {
     const arr = try TestArray(f64, size).init(std.testing.allocator, .{ 2, 3 });
     defer arr.deinit();
 
-    std.debug.assert(arr.owned == true);
-    std.debug.assert(arr.data.len == 6);
+    assert(arr.owned == true);
+    assert(arr.data.len == 6);
 
-    std.debug.assert(arr.shape.len == size);
-    std.debug.assert(arr.shape[0] == 2);
-    std.debug.assert(arr.shape[1] == 3);
+    assert(arr.shape.len == size);
+    assert(arr.shape[0] == 2);
+    assert(arr.shape[1] == 3);
 
-    std.debug.assert(arr.stride.len == size);
-    std.debug.assert(arr.stride[0] == 3);
-    std.debug.assert(arr.stride[1] == 1);
+    assert(arr.stride.len == size);
+    assert(arr.stride[0] == 3);
+    assert(arr.stride[1] == 1);
 }
 
 test "zeros" {
@@ -394,7 +395,7 @@ test "zeros" {
     defer arr.deinit();
 
     for (arr.data) |value| {
-        std.debug.assert(value == 0);
+        assert(value == 0);
     }
 }
 
@@ -405,15 +406,15 @@ test "clone" {
     const cloned = try arr.clone();
     defer cloned.deinit();
 
-    std.debug.assert(cloned.owned == true);
+    assert(cloned.owned == true);
 
-    std.debug.assert(cloned.shape.len == 2);
-    std.debug.assert(cloned.shape[0] == 10);
-    std.debug.assert(cloned.shape[1] == 9);
+    assert(cloned.shape.len == 2);
+    assert(cloned.shape[0] == 10);
+    assert(cloned.shape[1] == 9);
 
-    std.debug.assert(cloned.stride.len == 2);
-    std.debug.assert(cloned.stride[0] == 9);
-    std.debug.assert(cloned.stride[1] == 1);
+    assert(cloned.stride.len == 2);
+    assert(cloned.stride[0] == 9);
+    assert(cloned.stride[1] == 1);
 }
 
 test "view" {
@@ -426,24 +427,24 @@ test "view" {
         .{ .hi = 7, .st = 2 },
     });
 
-    std.debug.assert(view.owned == false);
+    assert(view.owned == false);
 
-    std.debug.assert(view.shape[0] == 8);
-    std.debug.assert(view.shape[1] == 4);
+    assert(view.shape[0] == 8);
+    assert(view.shape[1] == 4);
 
-    std.debug.assert(view.stride[0] == 8);
-    std.debug.assert(view.stride[1] == 2);
+    assert(view.stride[0] == 8);
+    assert(view.stride[1] == 2);
 
     const view_view = try view.view(.{
         .{ .lo = 0, .hi = 8, .st = 3 },
         .{ .hi = 3 },
     });
 
-    std.debug.assert(view_view.owned == false);
+    assert(view_view.owned == false);
 
-    std.debug.assert(view_view.shape[0] == 3);
-    std.debug.assert(view_view.shape[1] == 3);
+    assert(view_view.shape[0] == 3);
+    assert(view_view.shape[1] == 3);
 
-    std.debug.assert(view_view.stride[0] == 24);
-    std.debug.assert(view_view.stride[1] == 2);
+    assert(view_view.stride[0] == 24);
+    assert(view_view.stride[1] == 2);
 }
