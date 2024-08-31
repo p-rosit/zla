@@ -64,7 +64,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
         }
 
         pub fn clone(self: Self) !Self {
-            const copy = try Self.zeros(self.allocator, self.shape);
+            const copy = try Self.init(self.allocator, self.shape);
             var linear_index: usize = 0;
             var iter = Self.Iter.init(self.shape);
 
@@ -358,13 +358,13 @@ pub const Slice = struct {
 const TestArray = struct {
     pub fn array(dtype: type, dim: usize) type {
         switch (dtype) {
-            f64 => {
+            i8, f64 => {
                 return ArrayInternal(
                     dtype,
                     .{
                         .dtype = dtype,
                         .dim = dim,
-                        .zero = 0.0,
+                        .zero = 0,
                     },
                 );
             },
@@ -378,6 +378,9 @@ test "init" {
     const arr = try TestArray.array(f64, size).init(std.testing.allocator, .{ 2, 3 });
     defer arr.deinit();
 
+    std.debug.assert(arr.owned == true);
+    std.debug.assert(arr.data.len == 6);
+
     std.debug.assert(arr.shape.len == size);
     std.debug.assert(arr.shape[0] == 2);
     std.debug.assert(arr.shape[1] == 3);
@@ -385,6 +388,21 @@ test "init" {
     std.debug.assert(arr.stride.len == size);
     std.debug.assert(arr.stride[0] == 3);
     std.debug.assert(arr.stride[1] == 1);
+}
+
+test "zeros" {
+    const size: usize = 3;
+    const arr = try TestArray.array(i8, size).zeros(std.testing.allocator, .{ 2, 4, 5 });
+    defer arr.deinit();
+
+    for (arr.data) |value| {
+        std.debug.assert(value == 0);
+    }
+}
+
+test "clone" {
+    const size: usize = 2;
+    const arr = try Test
 }
 
 test "view" {
@@ -397,6 +415,7 @@ test "view" {
         .{ .hi = 7, .st = 2 },
     });
 
+    std.debug.assert(view.owned == false);
     std.debug.assert(view.shape[0] == 8);
     std.debug.assert(view.shape[1] == 4);
     std.debug.assert(view.stride[0] == 8);
@@ -407,6 +426,7 @@ test "view" {
         .{ .hi = 3 },
     });
 
+    std.debug.assert(view_view.owned == false);
     std.debug.assert(view_view.shape[0] == 3);
     std.debug.assert(view_view.shape[1] == 3);
     std.debug.assert(view_view.stride[0] == 24);
