@@ -45,3 +45,28 @@ pub fn ArrayConfigInternal(dtype: type) type {
         }
     };
 }
+
+test "numerical expects dim" {
+    _ = ArrayConfig(f32){ .dim = 1 };
+    _ = ArrayConfig(f64){ .dim = 1 };
+    _ = ArrayConfig(f128){ .dim = 1 };
+    _ = ArrayConfig(comptime_float){ .dim = 1 };
+
+    _ = ArrayConfig(u8){ .dim = 1 };
+    _ = ArrayConfig(i8){ .dim = 1 };
+    _ = ArrayConfig(u64){ .dim = 1 };
+    _ = ArrayConfig(i64){ .dim = 1 };
+    _ = ArrayConfig(comptime_int){ .dim = 1 };
+}
+
+test "custom expects zero" {
+    const Data = struct {
+        a: i8,
+        b: i8,
+    };
+
+    _ = ArrayConfig(Data){
+        .dim = 2,
+        .zero = Data{ .a = 0, .b = 0 },
+    };
+}

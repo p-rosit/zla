@@ -6,7 +6,7 @@ pub fn Array(dtype: type, config: cfg.ArrayConfig(dtype)) type {
     return array.ArrayInternal(dtype, cfg.ArrayConfigInternal(dtype).init(config));
 }
 
-test "test-all" {
+test "test-internal" {
     _ = @import("array.zig");
     _ = @import("config.zig");
     _ = @import("index_iter.zig");

@@ -355,6 +355,60 @@ pub const Slice = struct {
     }
 };
 
-test "array" {
-    std.debug.assert(1 == 1);
+const TestArray = struct {
+    pub fn array(dtype: type, dim: usize) type {
+        switch (dtype) {
+            f64 => {
+                return ArrayInternal(
+                    dtype,
+                    .{
+                        .dtype = dtype,
+                        .dim = dim,
+                        .zero = 0.0,
+                    },
+                );
+            },
+            else => @compileError("Oops"),
+        }
+    }
+};
+
+test "init" {
+    const size: usize = 2;
+    const arr = try TestArray.array(f64, size).init(std.testing.allocator, .{ 2, 3 });
+    defer arr.deinit();
+
+    std.debug.assert(arr.shape.len == size);
+    std.debug.assert(arr.shape[0] == 2);
+    std.debug.assert(arr.shape[1] == 3);
+
+    std.debug.assert(arr.stride.len == size);
+    std.debug.assert(arr.stride[0] == 3);
+    std.debug.assert(arr.stride[1] == 1);
+}
+
+test "view" {
+    const size: usize = 2;
+    const arr = try TestArray.array(f64, size).init(std.testing.allocator, .{ 10, 8 });
+    defer arr.deinit();
+
+    const view = try arr.view(.{
+        .{ .lo = 1, .hi = 9 },
+        .{ .hi = 7, .st = 2 },
+    });
+
+    std.debug.assert(view.shape[0] == 8);
+    std.debug.assert(view.shape[1] == 4);
+    std.debug.assert(view.stride[0] == 8);
+    std.debug.assert(view.stride[1] == 2);
+
+    const view_view = try view.view(.{
+        .{ .lo = 0, .hi = 8, .st = 3 },
+        .{ .hi = 3 },
+    });
+
+    std.debug.assert(view_view.shape[0] == 3);
+    std.debug.assert(view_view.shape[1] == 3);
+    std.debug.assert(view_view.stride[0] == 24);
+    std.debug.assert(view_view.stride[1] == 2);
 }
