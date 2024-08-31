@@ -19,7 +19,7 @@ pub inline fn operator(
     comptime Array: type,
     self: Array,
     other: Array,
-    op: fn (dtype, dtype) callconv(.Inline) dtype,
+    comptime op: fn (dtype, dtype) callconv(.Inline) dtype,
 ) !Array {
     // TODO: can be optimized with single for loop if arrays are compatible
     const shape = try self.get_broadcast_shape(other);
