@@ -1,3 +1,5 @@
+const assert = @import("std").debug.assert;
+
 pub fn ArrayConfig(dtype: type) type {
     const type_info = @typeInfo(dtype);
     return switch (type_info) {
@@ -69,4 +71,13 @@ test "custom expects zero" {
         .dim = 2,
         .zero = Data{ .a = 0, .b = 0 },
     };
+}
+
+test "internal from external" {
+    const config = ArrayConfig(f64){ .dim = 3 };
+    const internal = ArrayConfigInternal(f64).init(config);
+
+    assert(internal.dtype == f64);
+    assert(internal.dim == 3);
+    assert(internal.zero == 0.0);
 }
