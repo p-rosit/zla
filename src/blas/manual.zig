@@ -12,7 +12,7 @@ pub fn add(comptime Array: type, self: Array, other: Array) !Array {
         const v1 = a1.get(index) catch @panic("Unreachable");
         const v2 = a2.get(index) catch @panic("Unreachable");
 
-        result.data[linear_index] = v1 + v2;
+        result.data[linear_index] = Array.config.arithmetic.add(v1, v2);
 
         linear_index += 1;
     }
@@ -34,7 +34,7 @@ pub fn sub(comptime Array: type, self: Array, other: Array) !Array {
         const v1 = a1.get(index) catch @panic("Unreachable");
         const v2 = a2.get(index) catch @panic("Unreachable");
 
-        result.data[linear_index] = v1 - v2;
+        result.data[linear_index] = Array.config.arithmetic.sub(v1, v2);
 
         linear_index += 1;
     }

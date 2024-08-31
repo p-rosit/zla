@@ -348,12 +348,9 @@ fn TestArray(dtype: type, dim: usize) type {
         i8, f64 => {
             return ArrayInternal(
                 dtype,
-                .{
-                    .blas = .manual,
-                    .dtype = dtype,
+                cfg.ArrayConfigInternal(dtype).init(.{
                     .dim = dim,
-                    .zero = 0,
-                },
+                }),
             );
         },
         else => @compileError("Oops"),

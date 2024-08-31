@@ -10,6 +10,16 @@ pub fn ArrayConfig(dtype: type) type {
                 blas: BlasType = .manual,
                 dim: usize,
 
+                pub inline fn add(self: Self, a: dtype, b: dtype) dtype {
+                    _ = self;
+                    return a + b;
+                }
+
+                pub inline fn sub(self: Self, a: dtype, b: dtype) dtype {
+                    _ = self;
+                    return a - b;
+                }
+
                 pub fn get_blas(self: Self) BlasType {
                     return self.blas;
                 }
@@ -26,6 +36,16 @@ pub fn ArrayConfig(dtype: type) type {
 
                 dim: usize,
                 zero: dtype,
+                add: fn (dtype, dtype) callconv(.Inline) dtype,
+                sub: fn (dtype, dtype) callconv(.Inline) dtype,
+
+                pub inline fn add(self: Self, a: dtype, b: dtype) dtype {
+                    return self.add(a, b);
+                }
+
+                pub inline fn sub(self: Self, a: dtype, b: dtype) dtype {
+                    return self.sub(a, b);
+                }
 
                 pub fn get_blas(self: Self) BlasType {
                     _ = self;
@@ -48,13 +68,25 @@ pub fn ArrayConfigInternal(dtype: type) type {
         dtype: type,
         dim: usize,
         zero: dtype,
+        arithmetic: type,
 
         pub fn init(config: ArrayConfig(dtype)) Self {
+            const Temp = struct {
+                pub inline fn add(a: dtype, b: dtype) dtype {
+                    return config.add(a, b);
+                }
+
+                pub inline fn sub(a: dtype, b: dtype) dtype {
+                    return config.sub(a, b);
+                }
+            };
+
             return Self{
                 .blas = config.get_blas(),
                 .dtype = dtype,
                 .dim = config.dim,
                 .zero = config.get_zero(),
+                .arithmetic = Temp,
             };
         }
     };
@@ -78,15 +110,30 @@ test "numerical expects dim" {
     _ = ArrayConfig(comptime_int){ .dim = 1 };
 }
 
-test "custom type expects zero" {
-    const Data = struct {
-        a: i8,
-        b: i8,
-    };
+const Data = struct {
+    a: i8,
+    b: i8,
 
+    pub inline fn add(self: Data, other: Data) Data {
+        return Data{
+            .a = self.a + other.a,
+            .b = self.b + other.b,
+        };
+    }
+    pub inline fn sub(self: Data, other: Data) Data {
+        return Data{
+            .a = self.a - other.a,
+            .b = self.b - other.b,
+        };
+    }
+};
+
+test "custom type expects zero" {
     _ = ArrayConfig(Data){
         .dim = 2,
         .zero = Data{ .a = 0, .b = 0 },
+        .add = Data.add,
+        .sub = Data.sub,
     };
 }
 
