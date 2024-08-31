@@ -61,7 +61,7 @@ test "numerical expects dim" {
     _ = ArrayConfig(comptime_int){ .dim = 1 };
 }
 
-test "custom expects zero" {
+test "custom type expects zero" {
     const Data = struct {
         a: i8,
         b: i8,
