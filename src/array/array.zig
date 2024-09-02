@@ -6,7 +6,7 @@ const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
 const cfg = @import("config.zig");
 const idx = @import("index_iter.zig");
-const blas = @import("blas/blas.zig");
+const blas = @import("../blas.zig");
 
 pub const Error = error{
     Overflow,
@@ -15,7 +15,9 @@ pub const Error = error{
     NotCompatibleOrBroadcastable,
 };
 
-pub fn Array(comptime dtype: type, comptime config: cfg.ArrayConfig(dtype)) type {
+pub const Config = cfg.ArrayConfig;
+
+pub fn Array(comptime dtype: type, comptime config: Config(dtype)) type {
     return ArrayInternal(dtype, cfg.ArrayConfigInternal(dtype).init(config));
 }
 
@@ -361,7 +363,7 @@ pub const Slice = struct {
 
 fn TestArray(dtype: type, dim: usize) type {
     switch (dtype) {
-        i8, f64 => return Array(dtype, .{.dim=dim}),
+        i8, f64 => return Array(dtype, .{ .dim = dim }),
         else => @compileError("Oops"),
     }
 }

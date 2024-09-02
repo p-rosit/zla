@@ -1,17 +1,10 @@
 const std = @import("std");
-const array = @import("array.zig");
-const cfg = @import("config.zig");
+const array = @import("array/array.zig");
 
-pub fn Array(dtype: type, config: cfg.ArrayConfig(dtype)) type {
+pub fn Array(dtype: type, config: array.Config(dtype)) type {
     return array.Array(dtype, config);
 }
 
 test "make type" {
-    _ = Array(f64, .{.dim=3});
-}
-
-test "test-internal" {
-    _ = @import("array.zig");
-    _ = @import("config.zig");
-    _ = @import("index_iter.zig");
+    _ = Array(f64, .{ .dim = 3 });
 }

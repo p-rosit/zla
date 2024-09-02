@@ -1,6 +1,6 @@
-const array = @import("../array.zig");
-const manual = @import("manual.zig");
-const openblas = @import("openblas.zig");
+const array = @import("array/array.zig");
+const manual = @import("blas/manual.zig");
+const openblas = @import("blas/openblas.zig");
 
 pub fn add(comptime Array: type, self: Array, other: Array) !Array {
     return switch (Array.config.blas) {
