@@ -22,7 +22,7 @@ pub inline fn operator(
     comptime op: fn (dtype, dtype) callconv(.Inline) dtype,
 ) !Array {
     // TODO: can be optimized with single for loop if arrays are compatible
-    const shape = try self.get_broadcast_shape(other);
+    const shape = try array.get_broadcast_shape(self.config.dim, self.shape, other.shape);
     const result = try Array.init(self.allocator, shape);
 
     const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");

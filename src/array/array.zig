@@ -262,19 +262,6 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             return brd;
         }
 
-        pub fn get_broadcast_shape(self: Self, other: Self) ![config.dim]usize {
-            var shape: [config.dim]usize = undefined;
-
-            for (0.., self.shape, other.shape) |i, shape1, shape2| {
-                if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
-                    return Error.NotCompatibleOrBroadcastable;
-                }
-                shape[i] = @max(shape1, shape2);
-            }
-
-            return shape;
-        }
-
         pub fn reshape(self: Self, reshape_struct: anytype) !ArrayReshape(reshape_struct, config) {
             // TODO: can be heavily optimized if data is contiguous
             const ReshapeArray = ArrayReshape(reshape_struct, config);
@@ -309,6 +296,19 @@ fn ArrayReshape(reshape_struct: anytype, config: anytype) type {
     var copy_config = config;
     copy_config.dim = info.fields.len;
     return ArrayInternal(config.dtype, copy_config);
+}
+
+pub fn get_broadcast_shape(comptime size: usize, self: [size]usize, other: [size]usize) ![size]usize {
+    var shape: [size]usize = undefined;
+
+    for (0.., self, other) |i, shape1, shape2| {
+        if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
+            return Error.NotCompatibleOrBroadcastable;
+        }
+        shape[i] = @max(shape1, shape2);
+    }
+
+    return shape;
 }
 
 fn get_total_size(shape: []const usize) !usize {
