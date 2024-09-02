@@ -306,11 +306,9 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
 
 fn ArrayReshape(reshape_struct: anytype, config: anytype) type {
     const info = get_reshape_info(reshape_struct);
-    return ArrayInternal(config.dtype, cfg.ArrayConfigInternal(config.dtype){
-        .dtype = config.dtype,
-        .dim = info.fields.len,
-        .zero = config.zero,
-    });
+    var copy_config = config;
+    copy_config.dim = info.fields.len;
+    return ArrayInternal(config.dtype, copy_config);
 }
 
 fn get_total_size(shape: []const usize) !usize {
