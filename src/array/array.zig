@@ -476,3 +476,8 @@ test "transpose" {
     assert(arr.stride[2] == 5 * 4 * 3);
     assert(arr.stride[3] == 1);
 }
+
+test "array-internal" {
+    _ = @import("config.zig");
+    _ = @import("index_iter.zig");
+}

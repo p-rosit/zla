@@ -8,3 +8,8 @@ pub fn Array(dtype: type, config: array.Config(dtype)) type {
 test "make type" {
     _ = Array(f64, .{ .dim = 3 });
 }
+
+test "test-internal" {
+    _ = @import("array/array.zig");
+    _ = @import("blas.zig");
+}

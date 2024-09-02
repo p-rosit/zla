@@ -36,3 +36,8 @@ pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
         .openblas => openblas.matmul(Array, self, other),
     };
 }
+
+test "blas-internal" {
+    _ = @import("blas/manual.zig");
+    _ = @import("blas/openblas.zig");
+}
