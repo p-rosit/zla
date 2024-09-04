@@ -3,7 +3,6 @@ const print = std.debug.print;
 const assert = std.debug.assert;
 const math = std.math;
 const Allocator = std.mem.Allocator;
-const Struct = std.builtin.Type.Struct;
 const blas = @import("../blas.zig");
 
 pub const utils = @import("utils.zig");
@@ -243,15 +242,15 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
         pub fn reshape(self: Self, reshape_struct: anytype) !ArrayReshape(reshape_struct, config) {
             // TODO: can be heavily optimized if data is contiguous
             const ReshapeArray = ArrayReshape(reshape_struct, config);
-            const info = get_reshape_info(reshape_struct);
+            const info = utils.get_reshape_info(reshape_struct);
 
             var shape: [ReshapeArray.config.dim]usize = undefined;
             inline for (0.., info.fields) |i, field| {
                 shape[i] = @field(reshape_struct, field.name);
             }
 
-            const self_total = get_total_size(&self.shape) catch unreachable;
-            const new_total = try get_total_size(&shape);
+            const self_total = utils.get_total_size(&self.shape) catch unreachable;
+            const new_total = try utils.get_total_size(&shape);
 
             if (self_total != new_total) {
                 return Error.NotCompatibleOrBroadcastable;
@@ -270,53 +269,10 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
 }
 
 fn ArrayReshape(reshape_struct: anytype, config: anytype) type {
-    const info = get_reshape_info(reshape_struct);
+    const info = utils.get_reshape_info(reshape_struct);
     var copy_config = config;
     copy_config.dim = info.fields.len;
     return ArrayInternal(config.dtype, copy_config);
-}
-
-pub fn get_broadcast_shape(comptime size: usize, self: [size]usize, other: [size]usize) ![size]usize {
-    var shape: [size]usize = undefined;
-
-    for (0.., self, other) |i, shape1, shape2| {
-        if (shape1 != shape2 and shape1 != 1 and shape2 != 1) {
-            return Error.NotCompatibleOrBroadcastable;
-        }
-        shape[i] = @max(shape1, shape2);
-    }
-
-    return shape;
-}
-
-fn get_total_size(shape: []const usize) !usize {
-    var total: usize = 1;
-
-    for (shape) |dim| {
-        if (math.maxInt(usize) / dim < total) {
-            return Error.Overflow;
-        }
-        total *= dim;
-    }
-
-    return total;
-}
-
-fn get_reshape_info(reshape_struct: anytype) Struct {
-    const T = @TypeOf(reshape_struct);
-    const type_info = @typeInfo(T);
-
-    if (type_info != .Struct) {
-        @compileError("New shape must be struct");
-    }
-
-    const struct_info = type_info.Struct;
-    inline for (struct_info.fields) |field| {
-        // TODO: verify index is usize or similar
-        _ = field;
-    }
-
-    return struct_info;
 }
 
 const array_type = @import("../array.zig");
