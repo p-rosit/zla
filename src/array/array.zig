@@ -79,7 +79,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
             return copy;
         }
 
-        pub fn view(self: Self, slices: [config.dim]Slice) !Self {
+        pub fn view(self: Self, slices: [config.dim]utils.Slice) !Self {
             var min_index: [config.dim]usize = undefined;
             var shape: [config.dim]usize = undefined;
             var stride: [config.dim]usize = undefined;
@@ -322,24 +322,6 @@ fn get_reshape_info(reshape_struct: anytype) Struct {
 
     return struct_info;
 }
-
-pub const Slice = struct {
-    lo: usize = 0,
-    hi: usize,
-    st: usize = 1,
-
-    pub fn size(self: Slice) usize {
-        if (self.st == 0) {
-            @panic("Cannot get size of slice if stride is zero");
-        }
-
-        if (self.hi < self.lo) {
-            return 0;
-        } else {
-            return 1 + (self.hi - self.lo - 1) / self.st;
-        }
-    }
-};
 
 const array_type = @import("../array.zig");
 
