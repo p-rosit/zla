@@ -1,3 +1,10 @@
+pub const Error = error{
+    Overflow,
+    OutOfBounds,
+    MissingIndex,
+    NotCompatibleOrBroadcastable,
+};
+
 pub fn IndexIter(size: usize) type {
     return struct {
         const Self = @This();

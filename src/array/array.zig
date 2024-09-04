@@ -7,15 +7,9 @@ const Struct = std.builtin.Type.Struct;
 const blas = @import("../blas.zig");
 
 pub const utils = @import("utils.zig");
+pub const Error = utils.Error;
 pub const Config = @import("config.zig").Config;
 pub const ConfigInternal = @import("config.zig").ConfigInternal;
-
-pub const Error = error{
-    Overflow,
-    OutOfBounds,
-    MissingIndex,
-    NotCompatibleOrBroadcastable,
-};
 
 pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal(dtype)) type {
     return struct {
