@@ -4,9 +4,11 @@ const assert = std.debug.assert;
 const math = std.math;
 const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
-const cfg = @import("config.zig");
-const utils = @import("utils.zig");
 const blas = @import("../blas.zig");
+
+pub const utils = @import("utils.zig");
+pub const Config = @import("config.zig").Config;
+pub const ConfigInternal = @import("config.zig").ConfigInternal;
 
 pub const Error = error{
     Overflow,
@@ -15,7 +17,7 @@ pub const Error = error{
     NotCompatibleOrBroadcastable,
 };
 
-pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfigInternal(dtype)) type {
+pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
         pub const config = array_config;

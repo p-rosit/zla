@@ -1,6 +1,6 @@
 const assert = @import("std").debug.assert;
 
-pub fn ArrayConfig(dtype: type) type {
+pub fn Config(dtype: type) type {
     const type_info = @typeInfo(dtype);
     return switch (type_info) {
         .Int, .ComptimeInt, .Float, .ComptimeFloat => blk: {
@@ -80,7 +80,7 @@ pub fn ArrayConfig(dtype: type) type {
     };
 }
 
-pub fn ArrayConfigInternal(dtype: type) type {
+pub fn ConfigInternal(dtype: type) type {
     return struct {
         const Self = @This();
 
@@ -90,7 +90,7 @@ pub fn ArrayConfigInternal(dtype: type) type {
         zero: dtype,
         arithmetic: type,
 
-        pub fn init(config: ArrayConfig(dtype)) Self {
+        pub fn init(config: Config(dtype)) Self {
             const Temp = struct {
                 pub inline fn add(a: dtype, b: dtype) dtype {
                     return config.add(a, b);
@@ -126,16 +126,16 @@ const BlasType = enum {
 };
 
 test "numerical expects dim" {
-    _ = ArrayConfig(f32){ .dim = 1 };
-    _ = ArrayConfig(f64){ .dim = 1 };
-    _ = ArrayConfig(f128){ .dim = 1 };
-    _ = ArrayConfig(comptime_float){ .dim = 1 };
+    _ = Config(f32){ .dim = 1 };
+    _ = Config(f64){ .dim = 1 };
+    _ = Config(f128){ .dim = 1 };
+    _ = Config(comptime_float){ .dim = 1 };
 
-    _ = ArrayConfig(u8){ .dim = 1 };
-    _ = ArrayConfig(i8){ .dim = 1 };
-    _ = ArrayConfig(u64){ .dim = 1 };
-    _ = ArrayConfig(i64){ .dim = 1 };
-    _ = ArrayConfig(comptime_int){ .dim = 1 };
+    _ = Config(u8){ .dim = 1 };
+    _ = Config(i8){ .dim = 1 };
+    _ = Config(u64){ .dim = 1 };
+    _ = Config(i64){ .dim = 1 };
+    _ = Config(comptime_int){ .dim = 1 };
 }
 
 const Data = struct {
@@ -172,7 +172,7 @@ const Data = struct {
 };
 
 test "custom type expects zero" {
-    _ = ArrayConfig(Data){
+    _ = Config(Data){
         .dim = 2,
         .zero = Data{ .a = 0, .b = 0 },
         .add = Data.add,
@@ -183,8 +183,8 @@ test "custom type expects zero" {
 }
 
 test "internal from external" {
-    const config = ArrayConfig(f64){ .dim = 3 };
-    const internal = ArrayConfigInternal(f64).init(config);
+    const config = Config(f64){ .dim = 3 };
+    const internal = ConfigInternal(f64).init(config);
 
     assert(internal.blas == .manual);
     assert(internal.dtype == f64);
