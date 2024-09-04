@@ -5,7 +5,7 @@ const math = std.math;
 const Allocator = std.mem.Allocator;
 const Struct = std.builtin.Type.Struct;
 const cfg = @import("config.zig");
-const idx = @import("index_iter.zig");
+const utils = @import("utils.zig");
 const blas = @import("../blas.zig");
 
 pub const Error = error{
@@ -26,7 +26,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfi
         stride: [config.dim]usize,
         data: []dtype,
 
-        pub const Iter = idx.IndexIter(config.dim);
+        pub const Iter = utils.IndexIter(config.dim);
 
         pub fn init(allocator: Allocator, shape: [config.dim]usize) !Self {
             var stride: [config.dim]usize = undefined;
@@ -463,5 +463,5 @@ test "transpose" {
 
 test "array-internal" {
     _ = @import("config.zig");
-    _ = @import("index_iter.zig");
+    _ = @import("utils.zig");
 }

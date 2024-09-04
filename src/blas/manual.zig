@@ -2,7 +2,7 @@ const std = @import("std");
 const assert = std.debug.assert;
 const array = @import("../array.zig");
 const array_internal = @import("../array/array.zig");
-const index_iter = @import("../array/index_iter.zig");
+const array_utils = @import("../array/utils.zig");
 
 pub fn add(comptime Array: type, self: Array, other: Array) !Array {
     return operator(Array.config.dtype, Array, self, other, Array.config.arithmetic.add);
@@ -55,7 +55,7 @@ pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
 
     const size = Array.config.dim;
     const arithmetic = Array.config.arithmetic;
-    const Iter = index_iter.IndexIter(size - 2);
+    const Iter = array_utils.IndexIter(size - 2);
 
     var shape: [size]usize = undefined;
     var self_shape: [size]usize = undefined;
