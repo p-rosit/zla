@@ -15,12 +15,6 @@ pub const Error = error{
     NotCompatibleOrBroadcastable,
 };
 
-pub const Config = cfg.ArrayConfig;
-
-pub fn Array(comptime dtype: type, comptime config: Config(dtype)) type {
-    return ArrayInternal(dtype, cfg.ArrayConfigInternal(dtype).init(config));
-}
-
 pub fn ArrayInternal(comptime dtype: type, comptime array_config: cfg.ArrayConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
@@ -359,9 +353,11 @@ pub const Slice = struct {
     }
 };
 
+const array_type = @import("../array.zig");
+
 fn TestArray(dtype: type, dim: usize) type {
     switch (dtype) {
-        i8, f64 => return Array(dtype, .{ .dim = dim }),
+        i8, f64 => return array_type.Array(dtype, .{ .dim = dim }),
         else => @compileError("Oops"),
     }
 }

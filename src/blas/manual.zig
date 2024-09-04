@@ -1,6 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
-const array = @import("../array/array.zig");
+const array = @import("../array.zig");
+const array_internal = @import("../array/array.zig");
 const index_iter = @import("../array/index_iter.zig");
 
 pub fn add(comptime Array: type, self: Array, other: Array) !Array {
@@ -27,7 +28,7 @@ pub inline fn operator(
     comptime op: fn (dtype, dtype) callconv(.Inline) dtype,
 ) !Array {
     // TODO: can be optimized with single for loop if arrays are compatible
-    const shape = try array.get_broadcast_shape(self.config.dim, self.shape, other.shape);
+    const shape = try array_internal.get_broadcast_shape(self.config.dim, self.shape, other.shape);
     const result = try Array.init(self.allocator, shape);
 
     const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");
@@ -121,7 +122,7 @@ fn get_matmul_shapes(Array: type, self: Array, other: Array, shape: *[Array.conf
     @memcpy(&partial_self, self.shape[0 .. size - 2]);
     @memcpy(&partial_other, other.shape[0 .. size - 2]);
 
-    const partial_broadcast = try array.get_broadcast_shape(size - 2, partial_self, partial_other);
+    const partial_broadcast = try array_internal.get_broadcast_shape(size - 2, partial_self, partial_other);
     @memcpy(shape[0 .. size - 2], &partial_broadcast);
     @memcpy(self_shape[0 .. size - 2], &partial_broadcast);
     @memcpy(other_shape[0 .. size - 2], &partial_broadcast);
