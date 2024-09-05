@@ -376,6 +376,11 @@ test "permute" {
     assert(arr.stride[1] == 6);
     assert(arr.stride[2] == 1);
     assert(arr.stride[3] == 5 * 6);
+
+    try std.testing.expectError(
+        Error.MissingIndex,
+        arr.permute(.{ 0, 2, 3, 0 }),
+    );
 }
 
 test "transpose" {
@@ -393,6 +398,38 @@ test "transpose" {
     assert(arr.stride[1] == 5 * 4);
     assert(arr.stride[2] == 5 * 4 * 3);
     assert(arr.stride[3] == 1);
+}
+
+test "set-get" {
+    const arr = try TestArray(f64, 2).zeros(std.testing.allocator, .{ 2, 3 });
+    defer arr.deinit();
+
+    const index = [2]usize{ 1, 2 };
+    const v1 = try arr.get(index);
+
+    assert(v1 == 0);
+
+    try arr.set(index, 5);
+    const v2 = try arr.get(index);
+    assert(v2 == 5);
+}
+
+test "reshape" {
+    const arr = try TestArray(f64, 2).zeros(std.testing.allocator, .{ 3, 4 });
+    defer arr.deinit();
+
+    const res = try arr.reshape(.{ 2, 3, 2 });
+    defer res.deinit();
+
+    assert(res.shape.len == 3);
+    assert(res.shape[0] == 2);
+    assert(res.shape[1] == 3);
+    assert(res.shape[2] == 2);
+
+    try std.testing.expectError(
+        Error.NotCompatibleOrBroadcastable,
+        arr.reshape(.{ 2, 4, 2 }),
+    );
 }
 
 test "array-internal" {
