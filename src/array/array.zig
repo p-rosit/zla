@@ -10,6 +10,12 @@ pub const Error = utils.Error;
 pub const Config = @import("config.zig").Config;
 pub const ConfigInternal = @import("config.zig").ConfigInternal;
 
+pub const ElementOrder = enum {
+    row_major,
+    column_major,
+    neither,
+};
+
 pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal(dtype)) type {
     return struct {
         const Self = @This();
@@ -264,6 +270,31 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
             }
 
             return array;
+        }
+
+        pub fn elementOrder(self: Self) ElementOrder {
+            if (Self.config.dim == 1) {
+                return .neither;
+            }
+
+            const shape = self.shape;
+            const stride = self.stride;
+
+            if (stride[stride.len - 1] == 1) {
+                if (stride[stride.len - 2] == shape[shape.len - 1]) {
+                    return .column_major;
+                }
+            } else if (self.stride[self.stride.len - 2] == 1) {
+                if (stride[stride.len - 1] == shape[shape.len - 2]) {
+                    return .row_major;
+                }
+            }
+
+            return .row_major;
+        }
+
+        pub fn isBlasable(self: Self) bool {
+            return self.elementOrder() != .neither;
         }
     };
 }
