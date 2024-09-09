@@ -89,7 +89,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
                 stride[i] = self.stride[i] * slice.st;
             }
 
-            const linear_index = self.get_linear_index(min_index) catch {
+            const linear_index = self.getLinearIndex(min_index) catch {
                 @panic("Unreachable error: index out of bounds");
             };
 
@@ -140,7 +140,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
             self.stride[index2] = stride;
         }
 
-        pub fn debug_print(self: Self) void {
+        pub fn debugPrint(self: Self) void {
             print("Array[{}](shape={any}, stride={any})\n", .{ config.dtype, self.shape, self.stride });
 
             for (0..config.dim) |_| print("[", .{});
@@ -149,7 +149,7 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
             var index: [config.dim]usize = undefined;
             @memset(&index, 0);
             while (true) {
-                const linear_index = self.get_linear_index(index) catch unreachable;
+                const linear_index = self.getLinearIndex(index) catch unreachable;
 
                 print("{}", .{self.data[linear_index]});
 
@@ -183,16 +183,16 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
         }
 
         pub fn set(self: Self, index: [config.dim]usize, value: dtype) !void {
-            const linear_index = try self.get_linear_index(index);
+            const linear_index = try self.getLinearIndex(index);
             self.data[linear_index] = value;
         }
 
         pub fn get(self: Self, index: [config.dim]usize) !dtype {
-            const linear_index = try self.get_linear_index(index);
+            const linear_index = try self.getLinearIndex(index);
             return self.data[linear_index];
         }
 
-        fn get_linear_index(self: Self, index: [config.dim]usize) !usize {
+        fn getLinearIndex(self: Self, index: [config.dim]usize) !usize {
             var linear_index: usize = 0;
             for (index, self.stride, self.shape) |i, stride, dim| {
                 if (i >= dim) {
@@ -220,11 +220,11 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
             return blas.div(Self, self, other);
         }
 
-        pub fn matmul(self: Self, other: Self) !Self {
-            return blas.matmul(Self, self, other);
+        pub fn matMul(self: Self, other: Self) !Self {
+            return blas.matMul(Self, self, other);
         }
 
-        pub fn broadcast_to_shape(self: Self, shape: [config.dim]usize) !Self {
+        pub fn broadcastToShape(self: Self, shape: [config.dim]usize) !Self {
             var brd = self;
 
             for (&brd.shape, &brd.stride, shape) |*brd_dim, *brd_stride, dim| {

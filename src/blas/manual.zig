@@ -31,8 +31,8 @@ pub inline fn operator(
     const shape = try array_utils.get_broadcast_shape(self.config.dim, self.shape, other.shape);
     const result = try Array.init(self.allocator, shape);
 
-    const a1 = self.broadcast_to_shape(shape) catch @panic("Unreachable");
-    const a2 = other.broadcast_to_shape(shape) catch @panic("Unreachable");
+    const a1 = self.broadcastToShape(shape) catch @panic("Unreachable");
+    const a2 = other.broadcastToShape(shape) catch @panic("Unreachable");
 
     var linear_index: usize = 0;
     var iter = Array.Iter.init(shape);
@@ -48,7 +48,7 @@ pub inline fn operator(
     return result;
 }
 
-pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
+pub fn matMul(comptime Array: type, self: Array, other: Array) !Array {
     if (Array.config.dim < 2) {
         @compileError("Array dimension must be 2 or more to matrix multiply");
     }
@@ -63,8 +63,8 @@ pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
 
     try get_matmul_shapes(Array, self, other, &shape, &self_shape, &other_shape);
 
-    const a1 = self.broadcast_to_shape(self_shape) catch unreachable;
-    const a2 = other.broadcast_to_shape(other_shape) catch unreachable;
+    const a1 = self.broadcastToShape(self_shape) catch unreachable;
+    const a2 = other.broadcastToShape(other_shape) catch unreachable;
     const result = try Array.init(self.allocator, shape);
 
     const m = shape[size - 2];
@@ -133,7 +133,7 @@ fn get_matmul_shapes(Array: type, self: Array, other: Array, shape: *[Array.conf
     @memcpy(other_shape[size - 2 .. size], other.shape[size - 2 .. size]);
 }
 
-test "matmul" {
+test "matMul" {
     const Arr = array.Array(usize, .{ .dim = 1 });
     const a_lin = try Arr.init(std.testing.allocator, .{1 * 3 * 4 * 5});
     const b_lin = try Arr.init(std.testing.allocator, .{2 * 1 * 5 * 6});
@@ -148,7 +148,7 @@ test "matmul" {
     defer a.deinit();
     defer b.deinit();
 
-    const res = try a.matmul(b);
+    const res = try a.matMul(b);
     defer res.deinit();
 
     assert(res.shape.len == 4);

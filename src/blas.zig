@@ -30,10 +30,10 @@ pub fn div(comptime Array: type, self: Array, other: Array) !Array {
     };
 }
 
-pub fn matmul(comptime Array: type, self: Array, other: Array) !Array {
+pub fn matMul(comptime Array: type, self: Array, other: Array) !Array {
     return switch (Array.config.blas) {
-        .manual => manual.matmul(Array, self, other),
-        .openblas => openblas.matmul(Array, self, other),
+        .manual => manual.matMul(Array, self, other),
+        .openblas => openblas.matMul(Array, self, other),
     };
 }
 
