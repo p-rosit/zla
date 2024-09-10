@@ -22,7 +22,7 @@ pub fn div(comptime Array: type, self: Array, other: Array) !Array {
 }
 
 inline fn operator(
-    dtype: type,
+    comptime dtype: type,
     comptime Array: type,
     self: Array,
     other: Array,
