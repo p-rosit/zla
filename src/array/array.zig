@@ -296,6 +296,14 @@ pub fn ArrayInternal(comptime dtype: type, comptime array_config: ConfigInternal
         pub fn isBlasable(self: Self) bool {
             return self.elementOrder() != .neither;
         }
+
+        pub fn elementWiseCompatible(self: Self, other: Self) bool {
+            var result = true;
+            for (self.shape, self.stride, other.shape, other.stride) |d1, s1, d2, s2| {
+                result = result and (d1 == d2) and (s1 == s2);
+            }
+            return result;
+        }
     };
 }
 
