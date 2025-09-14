@@ -13,9 +13,15 @@ pub fn build(b: *std.Build) void {
     const mod_tests = b.addTest(.{
         .root_module = mod,
     });
-
     const run_mod_tests = b.addRunArtifact(mod_tests);
 
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_mod_tests.step);
+
+    const check = b.addTest(.{
+        .name = "zls-check",
+        .root_module = mod,
+    });
+    const check_step = b.step("check", "Check that project compiles (for zls)");
+    check_step.dependOn(&check.step);
 }
